@@ -1,0 +1,1 @@
+name = 'easy_scpi'
