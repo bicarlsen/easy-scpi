@@ -1,5 +1,5 @@
 # Easy SCPI
-An simple and robust library making communication with [SCPI](https://en.wikipedia.org/wiki/Standard_Commands_for_Programmable_Instruments) (Standard Control of Programmbale Instruments) instruments easy. After creating an instrument object that connects to an actual instrument, commands are sent to the instrument using a property-like format. This class is very useful for inheritance when creating a controller for a specific instrument.
+A simple and robust library making communication with [SCPI](https://en.wikipedia.org/wiki/Standard_Commands_for_Programmable_Instruments) (Standard Control of Programmbale Instruments) instruments easy. After creating an instrument object that connects to an actual instrument, commands are sent to the instrument using a property-like format. This class is very useful for inheritance when creating a controller for a specific instrument.
 
 ## API
 ### SCPI Commands
