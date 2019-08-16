@@ -1,3 +1,5 @@
 .ipynb_checkpoints/
 dist/
+build/
 easy_scpi.egg-info/
+_old/
