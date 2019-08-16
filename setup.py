@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="easy-scpi",
-    version="0.0.1",
+    version="0.0.2",
     author="Brian Carlsen",
     author_email="carlsen.bri@gmail.com",
     description="An easy library for controlling SCPI instruments",
@@ -18,4 +18,7 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
+    install_requires=[
+        
+    ]
 )

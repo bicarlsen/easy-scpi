@@ -1,5 +1,5 @@
 # Easy SCPI
-A simple and robust library making communication with [SCPI](https://en.wikipedia.org/wiki/Standard_Commands_for_Programmable_Instruments) (Standard Control of Programmbale Instruments) instruments easy. After creating an instrument object that connects to an actual instrument, commands are sent to the instrument using a property-like format. This class is very useful for inheritance when creating a controller for a specific instrument.
+A simple and robust library making communication with [SCPI](https://en.wikipedia.org/wiki/Standard_Commands_for_Programmable_Instruments) (Standard Control of Programmbale Instruments) instruments easy. After creating an instrument object that connects to an actual instrument, commands are sent to the instrument using a property-like format. This class is useful for inheritance when creating a controller for a specific instrument. Communication with instruments is done with [PyVISA](https://pyvisa.readthedocs.io).
 
 ## API
 ### SCPI Commands
@@ -7,8 +7,11 @@ Generic SCPI commands can be executed by transforming the SCPI code in to attrib
 
 #### Examples
 ~~~
+# import package
+import easy_scpi as scpi 
+
 # Connect to an instrument
-inst = Instrument( <port> )
+inst = scpi.SCPI_Instrument( <port> )
 
 # Read the voltage [MEASure:VOLTage:DC?]
 inst.measure.voltage.dc()
@@ -25,7 +28,7 @@ inst.syst.zcor.aqc( '' )
 ~~~
 
 ### Methods
-**Instrument( \<port\>, \<timeout\>, read_terminator = None, write_terminator = None, backend = '' ):** Creates an instance of an instrument
+**SCPI_Instrument( \<port\>, backend = '', **resource_params ):** Creates an instance of a SCPI instrument. The **backend** is used to create the [VISA Resource Manager](https://pyvisa.readthedocs.io/en/latest/introduction/getting.html#backend). Upon connection, the **resource_params** are passed to the [VISA resource](https://pyvisa.readthedocs.io/en/latest/introduction/resources.html).
 
 **connect():** Connects the object instance to the actual instrument on the specified port
 
@@ -42,17 +45,25 @@ inst.syst.zcor.aqc( '' )
 **init():** Initializes the instrument for a measurement
 
 ### Properties
-**port:** The communication port
+**backend:** Returns teh name of teh VISA backend used. [Read Only]
 
-**rid:** The resource id associated with the instrument [Read Only]
+**inst:** Returns the resource used by the instance. [Read Only]
 
-**timeout:** The communication timeout of the instrument [Read Only]
+**port:** The communication port.
 
-**id:** The manufacturer id of the instrument [Read Only]
+**rid:** The resource id associated with the instrument. [Read Only]
 
-**value:** The current value of the instrument [Read Only]
+**resource_params:** Returns the resource parameters passed on creation. [Read Only]
 
-**connected:** Whether the instrument is connected or not [Read Only]
+**timeout:** The communication timeout of the instrument. [Read Only]
+
+**id:** The manufacturer id of the instrument. [Read Only]
+
+**value:** The current value of the instrument. [Read Only]
+
+**connected:** Whether the instrument is connected or not. [Read Only]
+
+**is_connected:** Alias for **connected**.
 
 ## Full Example
 #### For use with Tektronix PWS4305
@@ -65,17 +76,26 @@ import sys
 import usb
 import visa
 
-#instrument controller
-import instrument_controller as ic
+# scpi controller
+import easy_scpi as scpi
 
 
 class PowerSupply( ic.Instrument ):
     
     def __init__( self, timeout = 10, rid = None ):
-        ic.Instrument.__init__( self, None, timeout, '\n', '\n' )
-        self.rid = '<default resource id>' if ( rid is None ) else rid
+        scpi.SCPI_Instrument.__init__( 
+            self, 
+            port = None, 
+            timeout = timeout, 
+            read_termination = '\n', 
+            write_termination = '\n' 
+        )
+
+        # other initialization code...
+
         
     #--- public methods ---
+
     
     @property        
     def voltage( self ):
