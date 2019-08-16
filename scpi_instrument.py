@@ -9,11 +9,11 @@
 # Generic SCPI commands can be executed by transforming the SCPI code in to attributes via the hierarchy relationship, then calling it. Instrument properties can be queried by passing no arguments to the call. Commands with no arguments are run by passing an empty string to the call.
 # 
 # #### Examples
-# `inst = Instrument()`
+# `inst = SCPI_Instrument()`
 # 
 # 
 # ### Methods
-# **Instrument(port, timeout)** Creates an instance of an instrument
+# **SCPI_Instrument(port, backend)** Creates an instance of an instrument
 # 
 # **connect()** Connects the program to the instrument
 # 
