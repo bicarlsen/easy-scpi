@@ -3,3 +3,4 @@ dist/
 build/
 easy_scpi.egg-info/
 _old/
+__pycache__

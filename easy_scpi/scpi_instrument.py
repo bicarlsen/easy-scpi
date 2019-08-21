@@ -13,47 +13,45 @@
 # 
 # 
 # ### Methods
-# **SCPI_Instrument(port, backend)** Creates an instance of an instrument
+# **SCPI_Instrument( &lt;port&gt;, backend = '', \*\*resource_params ):** Creates an instance of a SCPI instrument. The **backend** is used to create the [VISA Resource Manager](https://pyvisa.readthedocs.io/en/latest/introduction/getting.html#backend). Upon connection, the **resource_params** are passed to the [VISA resource](https://pyvisa.readthedocs.io/en/latest/introduction/resources.html).
 # 
-# **connect()** Connects the program to the instrument
+# **connect():** Connects the object instance to the actual instrument on the specified port.
 # 
-# **disconnect()** Disconnects the instrument from the program, closing the port
+# **disconnect():** Disconnects the instrument from the program, closing the port.
 # 
-# **write( msg )** Sends **msg** to the instrument 
+# **write( \<msg\> ):** Sends **msg** to the instrument .
 # 
-# **read()** Gets the most recent response from the instrument
+# **read():** Gets the most recent response from the instrument.
 # 
-# **query( msg )** Sends **msg** to the instrument and returns its response
+# **query( \<msg\> ):** Sends **msg** to the instrument and returns its response.
 # 
-# **reset()** Sets the instruemnt to its default state
+# **reset():** Sets the instrument to its default state.
 # 
-# **init()** Initializes the instrument for a measurement
+# **init():** Initializes the instrument for a measurement.
 # 
 # ### Properties
-# **port** The communication port
+# **backend:** Returns the name of the VISA backend used. [Read Only]
 # 
-# **rid** The resource id associated with the instrument [Read Only]
+# **inst:** Returns the resource used by the instance. [Read Only]
 # 
-# **timeout** The communication timeout of the instrument [Read Only]
+# **port:** The communication port.
 # 
-# **id** The manufacturer id of the instrument [Read Only]
+# **rid:** The resource id associated with the instrument. [Read Only]
 # 
-# **value** The current value of the instrument [Read Only]
+# **resource_params:** Returns the resource parameters passed on creation. [Read Only]
 # 
-# **connected** Whether the instrument is connected or not [Read Only]
+# **timeout:** The communication timeout of the instrument. [Read Only]
+# 
+# **id:** The manufacturer id of the instrument. [Read Only]
+# 
+# **value:** The current value of the instrument. [Read Only]
+# 
+# **connected:** Whether the instrument is connected or not. [Read Only]
+# 
+# **is_connected:** Alias for **connected**.
 
 # In[1]:
 
-
-# standard imports
-import os
-import sys
-import serial
-import re
-
-# FREEZE
-import logging
-logging.basicConfig( level = logging.DEBUG )
 
 # SCPI imports
 import visa
@@ -264,11 +262,6 @@ class SCPI_Instrument():
     
     
     @property
-    def timeout( self ):
-        return self.__timeout
-    
-    
-    @property
     def id( self ):
         """
         Returns the id of the ammeter
@@ -414,5 +407,3 @@ API:
         
     #--- main ---
     raise NotImplementedError()
-
-
