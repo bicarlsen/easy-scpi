@@ -7,99 +7,94 @@
 # ## API
 # ### SCPI Commands
 # Generic SCPI commands can be executed by transforming the SCPI code in to attributes via the hierarchy relationship, then calling it. Instrument properties can be queried by passing no arguments to the call. Commands with no arguments are run by passing an empty string to the call.
-# 
+#
 # #### Examples
 # `inst = SCPI_Instrument()`
-# 
-# 
+#
+#
 # ### Methods
 # **SCPI_Instrument( &lt;port&gt;, backend = '', \*\*resource_params ):** Creates an instance of a SCPI instrument. The **backend** is used to create the [VISA Resource Manager](https://pyvisa.readthedocs.io/en/latest/introduction/getting.html#backend). Upon connection, the **resource_params** are passed to the [VISA resource](https://pyvisa.readthedocs.io/en/latest/introduction/resources.html).
-# 
+#
 # **connect():** Connects the object instance to the actual instrument on the specified port.
-# 
+#
 # **disconnect():** Disconnects the instrument from the program, closing the port.
-# 
+#
 # **write( \<msg\> ):** Sends **msg** to the instrument .
-# 
+#
 # **read():** Gets the most recent response from the instrument.
-# 
+#
 # **query( \<msg\> ):** Sends **msg** to the instrument and returns its response.
-# 
+#
 # **reset():** Sets the instrument to its default state.
-# 
+#
 # **init():** Initializes the instrument for a measurement.
-# 
+#
 # ### Properties
 # **backend:** Returns the name of the VISA backend used. [Read Only]
-# 
+#
 # **inst:** Returns the resource used by the instance. [Read Only]
-# 
+#
 # **port:** The communication port.
-# 
+#
+# **handshake:** Handshake mode of the device. If a string is provided a handshake message will be read after every command or query. If the message matches the string, nothing occurs, otherwise an error is raised. If True a default message of 'OK' is used. If False no message is read. [Default: False]
+#
 # **rid:** The resource id associated with the instrument. [Read Only]
-# 
+#
 # **resource_params:** Returns the resource parameters passed on creation. [Read Only]
-# 
+#
 # **timeout:** The communication timeout of the instrument. [Read Only]
-# 
+#
 # **id:** The manufacturer id of the instrument. [Read Only]
-# 
+#
 # **value:** The current value of the instrument. [Read Only]
-# 
+#
 # **connected:** Whether the instrument is connected or not. [Read Only]
-# 
+#
 # **is_connected:** Alias for **connected**.
 
-# In[1]:
-
-
-# SCPI imports
-import visa
-
-
-# In[2]:
+import pyvisa as visa
 
 
 class Property( object ):
         """
-        Represents a scpi property of the instrument 
+        Represents a scpi property of the instrument
         """
-        
+
         #--- static variables ---
         ON  = 'ON'
         OFF = 'OFF'
-        
-        
+
+
         #--- class methods ---
-        
+
         def __init__( self, inst, name ):
-            self.__inst = inst # the instrument
+            self.__inst = inst  # the instrument
             self.name = name.upper()
 
-            
+
         def __getattr__( self, name ):
-            return Property( 
-                self.__inst, 
-                ':'.join( ( self.name, name.upper() ) ) 
+            return Property(
+                self.__inst,
+                ':'.join( ( self.name, name.upper() ) )
             )
 
-        
+
         def __call__( self, value = None ):
             if value is None:
                 # get property
                 return self.__inst.query( self.name + '?')
-                
+
             else:
                 # set value
                 if not isinstance( value, str ):
                     # try to convert value to string
                     value = str( value )
-                    
+
                 return self.__inst.write( self.name + ' ' + value )
-        
-        
+
+
         #--- static methods ---
-        
+
         @staticmethod
         def val2bool( val ):
             """
@@ -122,8 +117,8 @@ class Property( object ):
                     raise ValueError( 'Invalid input' )
 
             return bool( val )
-    
-    
+
+
         @staticmethod
         def val2state( val ):
             """
@@ -140,34 +135,39 @@ class Property( object ):
                 return 'OFF'
 
 
-# In[3]:
-
-
 class SCPI_Instrument():
     """
     Represents an instrument
-    
+
     Arbitrary SCPI commands can be performed
     treating the hieracrchy of the command as attributes.
-    
+
     To read an property:  inst.p1.p2.p3()
     To call a function:   inst.p1.p2( 'value' )
     To execute a command: inst.p1.p2.p3( '' )
     """
-  
+
     #--- methods ---
-    
-      
+
+
     def __getattr__( self, name ):
-        return Property( self, name )
-        
-    
-    def __init__( self, port = None, backend = '', **resource_params ):
+        resp = Property( self, name )
+        return resp
+
+
+    def __init__(
+        self,
+        port = None,
+        backend = '',
+        handshake = False,
+        **resource_params
+    ):
         """
         Creates an instance of an Instrument, to communicate with VISA instruments
-        
+
         :param port: The name of the port to connect to. [Default: None]
         :param backend: The pyvisa backend to use for communication.
+        :param handshake: Handshake mode. [Default: False]
         :param resource_params: Arguments based to the resource upon connection.
             https://pyvisa.readthedocs.io/en/latest/api/resources.html?highlight=baud#pyvisa.resources.SerialInstrument
         :returns: An Instrument communicator.
@@ -179,41 +179,46 @@ class SCPI_Instrument():
         self.__port = None
         self.__rid = None # the resource id of the instrument
         self.__resource_params = resource_params # options for connection
-        
+
         # init connection
         self.port = port # initilaize port
-        
-        
+
+        if handshake is True:
+            handshake = 'OK'
+
+        self.handshake = handshake
+
+
     def __del__( self ):
         """
         Disconnects and deletes the Instrument
         """
         if self.connected:
             self.disconnect()
-            
+
         del self.__inst
         del self.__rm
-        
+
     #--- private methods ---
-    
-    
+
+
     #--- public methods ---
-    
+
     @property
     def backend( self ):
         return self.__backend
-    
-    
+
+
     @property
     def instrument( self ):
         return self.__inst
-    
-    
+
+
     @property
     def port( self ):
         return self.__port
-        
-        
+
+
     @port.setter
     def port( self, port ):
         """
@@ -222,61 +227,60 @@ class SCPI_Instrument():
         """
         if self.__inst is not None:
             self.disconnect()
-            
+
         self.__port = port
-        
+
         # TODO: Make backend support more robust
         if port is None:
             self.__rid = None
-            
+
         else:
             # adjust port name for resource id to match backend
             if self.__backend == '@py':
                 r_port = port
                 if 'COM' not in r_port:
                     r_port = 'COM' + r_port
-                
-            else:
-                r_port = port.replace( 'COM', '' )      
-            
-            self.__rid = 'ASRL{}::INSTR'.format( r_port )    
 
-         
-        
+            else:
+                r_port = port.replace( 'COM', '' )
+
+            self.__rid = 'ASRL{}::INSTR'.format( r_port )
+
+
     @property
     def rid( self ):
         """
         Return the resource id of the instrument
         """
         return self.__rid
-    
-    
+
+
     @rid.setter
     def rid( self, rid ):
         self.__rid = rid
-        
-    
+
+
     @property
     def resource_params( self ):
         return self.__resource_params
-    
-    
+
+
     @property
     def id( self ):
         """
         Returns the id of the ammeter
         """
         return self.query( '*IDN?' )
-            
-          
+
+
     @property
     def value( self ):
         """
         Get current value
         """
         return self.query( 'READ?' )
-    
-        
+
+
     @property
     def connected( self ):
         """
@@ -284,24 +288,24 @@ class SCPI_Instrument():
         """
         if self.__inst is None:
             return False
- 
+
         try:
             # session throws excpetion if not connected
             self.__inst.session
             return True
-        
+
         except visa.InvalidSession:
             return False
-        
-    
+
+
     @property
     def is_connected( self ):
         """
         Alias for connected
         """
         return self.connected
-    
-        
+
+
     def connect( self ):
         """
         Connects to the instrument on the given port.
@@ -309,7 +313,7 @@ class SCPI_Instrument():
         if not self.rid:
             # no resource id
             raise RuntimeError( 'Can not connect. No resource id provided.' )
-        
+
         if self.__inst is None:
             self.__inst = self.__rm.open_resource( self.rid )
 
@@ -319,76 +323,89 @@ class SCPI_Instrument():
 
         else:
             self.__inst.open()
-            
-        self.id # place instrument in remote control
-        
-        
+
+        self.id  # place instrument in remote control
+
+
     def disconnect( self ):
         """
         Disconnects from the instrument, and returns local control
         """
         if self.__inst is not None:
-            self.syst.loc( '' )
             self.__inst.close()
-            
-            
+
+
     def write( self, msg ):
         """
         Delegates write to resource
         """
         if self.__inst is None:
-            raise Exception( 'Can not write, instrument not connected.' )
-            return
-            
-        return self.__inst.write( msg )
-            
-            
+            raise RuntimeError( 'Can not write, instrument not connected.' )
+
+        resp = self.__inst.write( msg )
+        self._handle_handshake()
+
+        return resp
+
+
     def read( self ):
         """
         Delegates read to resource
         """
         if self.__inst is None:
-            raise Exception( 'Can not read, instrument not connected' )
-            return
-            
-        return self.__inst.read()
-    
-    
+            raise RuntimeError( 'Can not read, instrument not connected' )
+
+        resp = self.__inst.read()
+        return resp
+
+
     def query( self, msg ):
         """
         Delegates query to resource
         """
         if self.__inst is None:
-            raise Exception( 'Can not query, instrument not connected' )
-        
-        return self.__inst.query( msg )
-            
-        
+            raise RuntimeError( 'Can not query, instrument not connected' )
+
+        resp = self.__inst.query( msg )
+        self._handle_handshake()
+
+        return resp
+
+
     def reset( self ):
         """
         Resets the meter to inital state
         """
         return self.write( '*RST' )
-    
-    
+
+
     def init( self ):
         """
         Initialize the instrument
         """
         return self.write( 'INIT' )
-        
+
+
+    def _handle_handshake( self ):
+        """
+        Handles handshaking if enabled.
+
+        :raises RuntimeError: If the response message does not match the handshake message.
+        """
+        if self.handshake:
+            hs = self.read()
+            if hs != self.handshake:
+                raise RuntimeError( hs )
 
 
 # # CLI
 
-# In[4]:
-
 
 if __name__ == '__main__':
     import getopt
-    
+
     #--- helper functions ---
-    
+
     def print_help():
         print( """
 Instrument Controller CLI
@@ -404,6 +421,6 @@ API:
 + query()
 
         """)
-        
+
     #--- main ---
     raise NotImplementedError()

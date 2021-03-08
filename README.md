@@ -54,6 +54,8 @@ inst.syst.zcor.aqc( '' )
 
 **port:** The communication port.
 
+**handshake:** Handshake mode of the device. If a string is provided a handshake message will be read after every command or query. If the message matches the string, nothing occurs, otherwise an error is raised. If True a default message of 'OK' is used. If False no message is read. [Default: False]
+
 **rid:** The resource id associated with the instrument. [Read Only]
 
 **resource_params:** Returns the resource parameters passed on creation. [Read Only]
