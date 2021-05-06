@@ -236,13 +236,13 @@ class SCPI_Instrument():
 
         else:
             # adjust port name for resource id to match backend
-            if self.__backend == '@py':
-                r_port = port
-                if 'COM' not in r_port:
-                    r_port = 'COM' + r_port
-
-            else:
-                r_port = port.replace( 'COM', '' )
+            # if self.__backend == '@py':
+            #     r_port = port
+            #     if 'COM' not in r_port:
+            #         r_port = 'COM' + r_port
+            #
+            # else:
+            r_port = port.replace( 'COM', '' )
 
             self.__rid = 'ASRL{}::INSTR'.format( r_port )
 
