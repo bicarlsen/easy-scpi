@@ -52,6 +52,9 @@
 #
 # **is_connected:** Alias for **connected**.
 
+
+import re
+
 import pyvisa as visa
 
 
@@ -224,21 +227,69 @@ class SCPI_Instrument():
         """
         Disconnects from current connection and updates port and id.
         Does not reconnect.
+
+        :raises ValueError: If connection type is not specified.
+        :raises RuntimeError: If resource matching specified port could not be found.
+        :raises RuntimeError: If more than 1 matching resource is found.
         """
+        if port is None:
+            self.__port = None
+            self.__rid = None
+            return
+
+        port_name = port.upper()
+
+        if (
+            ( not port_name.startswith( 'COM' ) ) and
+            ( not port_name.startswith( 'USB' ) )
+        ):
+            raise ValueError( "'COM' or 'USB' must be in port name." )
+
         if self.__inst is not None:
             self.disconnect()
 
         self.__port = port
 
-        # TODO: Make backend support more robust
-        if port is None:
-            self.__rid = None
+        # search for resource
+        if port_name.startswith( 'USB' ): 
+            resource_pattern = (
+                port
+                if port_name.endswith( 'INSTR' ) else
+                f'{ port }::.*::INSTR'
+            )
 
         else:
-            # adjust port name for resource id to match backend
             r_port = port.replace( 'COM', '' )
+            resource_pattern = f'ASRL((?:COM)?{ r_port })::INSTR'
 
-            self.__rid = 'ASRL{}::INSTR'.format( r_port )
+        rm = visa.ResourceManager( self.backend )
+        matches = list( map(
+            lambda resource: re.match( resource_pattern, resource ),
+            rm.list_resources()
+        ) )
+
+        matches = [ match for match in matches if match is not None ]
+        if len( matches ) == 0:
+            # no matching resources found
+            raise RuntimeError( f'Could not find resource matching port {port}' )
+
+        elif len( matches ) > 1:
+            # multiple matching resource
+            raise RuntimeError( f'Found multiple resources matching port {port}' )
+
+        # single matching resource
+        self.__rid = matches[ 0 ].group( 0 )
+
+        # adjust port name for resource id to match backend
+        # if self.backend == '@py':
+        #     r_port = port
+        #     if 'COM' not in r_port:
+        #         r_port = 'COM' + r_port
+
+        # else:
+        #     r_port = port.replace( 'COM', '' )
+
+        # self.__rid = f'ASRL{ r_port }::INSTR'
 
 
     @property

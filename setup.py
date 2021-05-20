@@ -10,7 +10,7 @@ project_urls = {
 
 setuptools.setup(
     name="easy-scpi",
-    version="0.0.9",
+    version="0.1.0",
     author="Brian Carlsen",
     author_email="carlsen.bri@gmail.com",
     description="An easy library for controlling SCPI instruments",
@@ -27,6 +27,6 @@ setuptools.setup(
         "Development Status :: 3 - Alpha"
     ],
     install_requires=[
-        'PyVISA'
+        'pyVISA'
     ]
 )
