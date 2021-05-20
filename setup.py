@@ -3,6 +3,11 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+project_urls = {
+    'Source Code':      'https://github.com/bicarlsen/easy-scpi',
+    'Bug Tracker':      'https://github.com/bicarlsen/easy-scpi/issues'
+}
+
 setuptools.setup(
     name="easy-scpi",
     version="0.0.9",
@@ -12,7 +17,8 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     keywords=['scpi'],
-    url="https://github.com/bicarlsen/easy-scpi",
+    url="",
+    project_urls = project_urls,
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",

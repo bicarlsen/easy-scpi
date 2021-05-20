@@ -398,7 +398,7 @@ class SCPI_Instrument():
                 raise RuntimeError( hs )
 
 
-# # CLI
+# --- CLI
 
 
 if __name__ == '__main__':
