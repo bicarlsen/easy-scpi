@@ -16,7 +16,7 @@ setuptools.setup(
     description="An easy library for controlling SCPI instruments",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    keywords=['scpi'],
+    keywords=[ 'scpi' ],
     url="",
     project_urls = project_urls,
     packages=setuptools.find_packages(),

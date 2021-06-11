@@ -54,6 +54,7 @@
 
 
 import re
+import platform
 
 import pyvisa as visa
 
@@ -70,9 +71,10 @@ class Property( object ):
 
         #--- class methods ---
 
-        def __init__( self, inst, name ):
+        def __init__( self, inst, name, arg_separator = ',' ):
             self.__inst = inst  # the instrument
             self.name = name.upper()
+            self.arg_separator = arg_separator
 
 
         def __getattr__( self, name ):
@@ -82,18 +84,18 @@ class Property( object ):
             )
 
 
-        def __call__( self, value = None ):
-            if value is None:
+        def __call__( self, *values ):
+            if len( values ) == 0:
                 # get property
-                return self.__inst.query( self.name + '?')
+                return self.__inst.query( f'{ self.name }?')
 
             else:
                 # set value
-                if not isinstance( value, str ):
-                    # try to convert value to string
-                    value = str( value )
+                values = [ str( val ) for val in values ]
+                values = self.arg_separator.join( values )
 
-                return self.__inst.write( self.name + ' ' + value )
+                cmd = f'{ self.name } { values }'
+                return self.__inst.write( cmd )
 
 
         #--- static methods ---
@@ -154,7 +156,7 @@ class SCPI_Instrument():
 
 
     def __getattr__( self, name ):
-        resp = Property( self, name )
+        resp = Property( self, name, arg_separator = self.arg_separator )
         return resp
 
 
@@ -163,6 +165,7 @@ class SCPI_Instrument():
         port = None,
         backend = '',
         handshake = False,
+        arg_separator = ',',
         **resource_params
     ):
         """
@@ -171,6 +174,7 @@ class SCPI_Instrument():
         :param port: The name of the port to connect to. [Default: None]
         :param backend: The pyvisa backend to use for communication.
         :param handshake: Handshake mode. [Default: False]
+        :param arg_separator: Separator between arguments. [Default: ',']
         :param resource_params: Arguments based to the resource upon connection.
             https://pyvisa.readthedocs.io/en/latest/api/resources.html?highlight=baud#pyvisa.resources.SerialInstrument
         :returns: An Instrument communicator.
@@ -183,8 +187,10 @@ class SCPI_Instrument():
         self.__rid = None # the resource id of the instrument
         self.__resource_params = resource_params # options for connection
 
+
         # init connection
         self.port = port # initilaize port
+        self.arg_separator = arg_separator
 
         if handshake is True:
             handshake = 'OK'
@@ -225,71 +231,22 @@ class SCPI_Instrument():
     @port.setter
     def port( self, port ):
         """
-        Disconnects from current connection and updates port and id.
-        Does not reconnect.
+        Connects to the given port based on the OS.
+        [See #_set_port_windows and #_set_port_linux for more.]
 
-        :raises ValueError: If connection type is not specified.
-        :raises RuntimeError: If resource matching specified port could not be found.
-        :raises RuntimeError: If more than 1 matching resource is found.
+        :param port: The port to connect to.
         """
         if port is None:
             self.__port = None
             self.__rid = None
             return
 
-        port_name = port.upper()
-
-        if (
-            ( not port_name.startswith( 'COM' ) ) and
-            ( not port_name.startswith( 'USB' ) )
-        ):
-            raise ValueError( "'COM' or 'USB' must be in port name." )
-
-        if self.__inst is not None:
-            self.disconnect()
-
-        self.__port = port
-
-        # search for resource
-        if port_name.startswith( 'USB' ): 
-            resource_pattern = (
-                port
-                if port_name.endswith( 'INSTR' ) else
-                f'{ port }::.*::INSTR'
-            )
+        system = platform.system()
+        if system == 'Windows':
+            self._set_port_windows( port )
 
         else:
-            r_port = port.replace( 'COM', '' )
-            resource_pattern = f'ASRL((?:COM)?{ r_port })::INSTR'
-
-        rm = visa.ResourceManager( self.backend )
-        matches = list( map(
-            lambda resource: re.match( resource_pattern, resource ),
-            rm.list_resources()
-        ) )
-
-        matches = [ match for match in matches if match is not None ]
-        if len( matches ) == 0:
-            # no matching resources found
-            raise RuntimeError( f'Could not find resource matching port {port}' )
-
-        elif len( matches ) > 1:
-            # multiple matching resource
-            raise RuntimeError( f'Found multiple resources matching port {port}' )
-
-        # single matching resource
-        self.__rid = matches[ 0 ].group( 0 )
-
-        # adjust port name for resource id to match backend
-        # if self.backend == '@py':
-        #     r_port = port
-        #     if 'COM' not in r_port:
-        #         r_port = 'COM' + r_port
-
-        # else:
-        #     r_port = port.replace( 'COM', '' )
-
-        # self.__rid = f'ASRL{ r_port }::INSTR'
+            self._set_port_linux( port )
 
 
     @property
@@ -441,6 +398,96 @@ class SCPI_Instrument():
             hs = self.read()
             if hs != self.handshake:
                 raise RuntimeError( hs )
+
+
+    def _set_port_windows( self, port ):
+        """
+        Disconnects from current connection and updates port and id.
+        Does not reconnect.
+
+        :param port: Name of port to connect to.
+        :raises ValueError: If connection type is not specified.
+        """
+        port_name = port.upper()
+
+        if (
+            ( not port_name.startswith( 'COM' ) ) and
+            ( not port_name.startswith( 'USB' ) )
+        ):
+            raise ValueError( "Port must start with 'COM' or 'USB'." )
+
+        if self.__inst is not None:
+            self.disconnect()
+
+        self.__port = port
+        # search for resource
+        if port_name.startswith( 'USB' ): 
+            resource_pattern = (
+                port
+                if port_name.endswith( 'INSTR' ) else
+                f'{ port }::.*::INSTR'
+            )
+
+        elif port_name.startswith( 'COM' ):
+            r_port = port.replace( 'COM', '' )
+            resource_pattern = f'ASRL((?:COM)?{ r_port })::INSTR'
+
+        else:
+            # redundant error check for future compatibility
+            raise ValueError( "Port must start with 'COM' or 'USB'." )
+
+        # single matching resource
+        resource = self._match_resource( resource_pattern )
+        self.__rid = resource
+
+
+    def _set_port_linux( self, port ):
+        """
+        Disconnects from current connection and updates port and id.
+        Does not reconnect.
+
+        :param port: Name of port to connect to.
+        :raises ValueError: If connection type is not specified.
+        :raises RuntimeError: If resource matching specified port could not be found.
+        :raises RuntimeError: If more than 1 matching resource is found.
+        """
+        if self.__inst is not None:
+            self.disconnect()
+
+        self.__port = port
+
+        resource_pattern = f'ASRL{ port }::INSTR'
+        resource = self._match_resource( resource_pattern )
+        self._rid = resource
+
+
+    def _match_resource( self, resource ):
+        """
+        Matches port name with a resource.
+
+        :param resource: Resource name.
+        :returns: Resource name.
+        :raises RuntimeError: If resource matching specified port could not be found.
+        :raises RuntimeError: If more than 1 matching resource is found.
+        """
+        rm = visa.ResourceManager( self.backend )
+        matches = [
+            re.match( resource, res, re.IGNORECASE )
+            for res in rm.list_resources()
+        ]
+        
+        matches = [ match for match in matches if match is not None ]
+        if len( matches ) == 0:
+            # no matching resources found
+            raise RuntimeError( f'Could not find resource {resource}' )
+
+        elif len( matches ) > 1:
+            # multiple matching resource
+            raise RuntimeError( f'Found multiple resources matching {resource}' )
+
+        # only one match, success
+        r_name = matches[ 0 ].group( 0 )
+        return r_name
 
 
 # --- CLI
