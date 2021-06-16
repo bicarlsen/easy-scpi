@@ -51,6 +51,8 @@
 # **connected:** Whether the instrument is connected or not. [Read Only]
 #
 # **is_connected:** Alias for **connected**.
+#
+# **arg_separator:** Argument separator for method calls. [Default: ',']
 
 
 import re
@@ -72,6 +74,16 @@ class Property( object ):
         #--- class methods ---
 
         def __init__( self, inst, name, arg_separator = ',' ):
+            """
+            Represents a call to a SCPI instrument's proeprty or method.
+
+            :param inst: A SCPI instrument resource.
+            :param name: Name of the property.
+                Used to recursively build the property call message.
+            :param arg_separator: Separator to use to separate
+                methos arguments in a method call.
+                [Default: ',']  
+            """
             self.__inst = inst  # the instrument
             self.name = name.upper()
             self.arg_separator = arg_separator
@@ -80,7 +92,8 @@ class Property( object ):
         def __getattr__( self, name ):
             return Property(
                 self.__inst,
-                ':'.join( ( self.name, name.upper() ) )
+                ':'.join( ( self.name, name.upper() ) ),
+                arg_separator = self.arg_separator
             )
 
 
@@ -155,11 +168,6 @@ class SCPI_Instrument():
     #--- methods ---
 
 
-    def __getattr__( self, name ):
-        resp = Property( self, name, arg_separator = self.arg_separator )
-        return resp
-
-
     def __init__(
         self,
         port = None,
@@ -174,7 +182,7 @@ class SCPI_Instrument():
         :param port: The name of the port to connect to. [Default: None]
         :param backend: The pyvisa backend to use for communication.
         :param handshake: Handshake mode. [Default: False]
-        :param arg_separator: Separator between arguments. [Default: ',']
+        :param arg_separator: Separator to use between arguments. [Default: ',']
         :param resource_params: Arguments based to the resource upon connection.
             https://pyvisa.readthedocs.io/en/latest/api/resources.html?highlight=baud#pyvisa.resources.SerialInstrument
         :returns: An Instrument communicator.
@@ -207,6 +215,12 @@ class SCPI_Instrument():
 
         del self.__inst
         del self.__rm
+
+
+    def __getattr__( self, name ):
+        resp = Property( self, name, arg_separator = self.arg_separator )
+        return resp
+
 
     #--- private methods ---
 
