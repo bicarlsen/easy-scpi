@@ -10,7 +10,7 @@ project_urls = {
 
 setuptools.setup(
     name="easy-scpi",
-    version="0.1.1",
+    version="0.1.2",
     author="Brian Carlsen",
     author_email="carlsen.bri@gmail.com",
     description="An easy library for controlling SCPI instruments",
