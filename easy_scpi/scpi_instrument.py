@@ -180,11 +180,11 @@ class SCPI_Instrument():
         Creates an instance of an Instrument, to communicate with VISA instruments
 
         :param port: The name of the port to connect to. [Default: None]
-        :param backend: The pyvisa backend to use for communication.
+        :param backend: The pyvisa backend to use for communication. [Defualt: '']
         :param handshake: Handshake mode. [Default: False]
         :param arg_separator: Separator to use between arguments. [Default: ',']
-        :param resource_params: Arguments based to the resource upon connection.
-            https://pyvisa.readthedocs.io/en/latest/api/resources.html?highlight=baud#pyvisa.resources.SerialInstrument
+        :param resource_params: Arguments sent to the resource upon connection.
+            https://pyvisa.readthedocs.io/en/latest/api/resources.html
         :returns: An Instrument communicator.
         """
         #--- private instance vairables ---
@@ -470,9 +470,21 @@ class SCPI_Instrument():
 
         self.__port = port
 
-        resource_pattern = f'ASRL{ port }::INSTR'
+        # build resource pattern
+        resource_pattern = port
+        if not resource_pattern.startswith( 'ASRL' ):
+            asrl = 'ASRL'
+            if not resource_pattern.startswith( '/' ):
+                # append inital '/' if needed
+                asrl += '/'
+
+            resource_pattern = f'{asrl}{resource_pattern}'
+
+        if not resource_pattern.endswith( '::INSTR' ):
+            resource_pattern = f'{resource_pattern}::INSTR'
+
         resource = self._match_resource( resource_pattern )
-        self._rid = resource
+        self.__rid = resource
 
 
     def _match_resource( self, resource ):
