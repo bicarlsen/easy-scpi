@@ -79,7 +79,7 @@ import easy_scpi as scpi
 class PowerSupply( scpi.Instrument ):
     
     def __init__( self ):
-        scpi.SCPI_Instrument.__init__( 
+        scpi.Instrument.__init__( 
             self, 
             port = None, 
             timeout = 5,
