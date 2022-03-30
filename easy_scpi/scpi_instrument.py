@@ -426,16 +426,17 @@ class SCPI_Instrument():
 
         if (
             ( not port_name.startswith( 'COM' ) ) and
-            ( not port_name.startswith( 'USB' ) )
+            ( not port_name.startswith( 'USB' ) ) and
+            ( not port_name.startswith( 'GPIB' ) )
         ):
-            raise ValueError( "Port must start with 'COM' or 'USB'." )
+            raise ValueError( "Port must start with 'COM', 'USB', or 'GPIB'." )
 
         if self.__inst is not None:
             self.disconnect()
 
         self.__port = port
         # search for resource
-        if port_name.startswith( 'USB' ): 
+        if port_name.startswith( 'USB' ) or port_name.startswith( 'GPIB' ):
             resource_pattern = (
                 port
                 if port_name.endswith( 'INSTR' ) else
@@ -448,7 +449,7 @@ class SCPI_Instrument():
 
         else:
             # redundant error check for future compatibility
-            raise ValueError( "Port must start with 'COM' or 'USB'." )
+            raise ValueError( "Port must start with 'COM', 'USB', or 'GPIB'." )
 
         # single matching resource
         resource = self._match_resource( resource_pattern )
