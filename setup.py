@@ -1,5 +1,8 @@
 import setuptools
 
+# get __version__
+exec( open( 'thot/_version.py' ).read() )
+
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
@@ -10,7 +13,7 @@ project_urls = {
 
 setuptools.setup(
     name="easy-scpi",
-    version="0.1.2",
+    version=__version__,
     author="Brian Carlsen",
     author_email="carlsen.bri@gmail.com",
     description="An easy library for controlling SCPI instruments",
