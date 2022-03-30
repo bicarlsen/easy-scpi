@@ -1,7 +1,7 @@
 import setuptools
 
 # get __version__
-exec( open( 'thot/_version.py' ).read() )
+exec( open( 'easy_scpi/_version.py' ).read() )
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
