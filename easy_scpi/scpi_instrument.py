@@ -82,7 +82,7 @@ class Property( object ):
                 Used to recursively build the property call message.
             :param arg_separator: Separator to use to separate
                 methos arguments in a method call.
-                [Default: ',']  
+                [Default: ',']
             """
             self.__inst = inst  # the instrument
             self.name = name.upper()
@@ -426,16 +426,17 @@ class SCPI_Instrument():
 
         if (
             ( not port_name.startswith( 'COM' ) ) and
-            ( not port_name.startswith( 'USB' ) )
+            ( not port_name.startswith( 'USB' ) ) and
+            ( not port_name.startswith( 'GPIB' ) )
         ):
-            raise ValueError( "Port must start with 'COM' or 'USB'." )
+            raise ValueError( "Port must start with 'COM', 'USB', or 'GPIB'." )
 
         if self.__inst is not None:
             self.disconnect()
 
         self.__port = port
         # search for resource
-        if port_name.startswith( 'USB' ): 
+        if port_name.startswith( 'USB' ) or port_name.startswith( 'GPIB' ):
             resource_pattern = (
                 port
                 if port_name.endswith( 'INSTR' ) else
@@ -448,7 +449,7 @@ class SCPI_Instrument():
 
         else:
             # redundant error check for future compatibility
-            raise ValueError( "Port must start with 'COM' or 'USB'." )
+            raise ValueError( "Port must start with 'COM', 'USB', or 'GPIB'." )
 
         # single matching resource
         resource = self._match_resource( resource_pattern )
@@ -501,7 +502,7 @@ class SCPI_Instrument():
             re.match( resource, res, re.IGNORECASE )
             for res in rm.list_resources()
         ]
-        
+
         matches = [ match for match in matches if match is not None ]
         if len( matches ) == 0:
             # no matching resources found
