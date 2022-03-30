@@ -82,7 +82,7 @@ class Property( object ):
                 Used to recursively build the property call message.
             :param arg_separator: Separator to use to separate
                 methos arguments in a method call.
-                [Default: ',']  
+                [Default: ',']
             """
             self.__inst = inst  # the instrument
             self.name = name.upper()
@@ -502,7 +502,7 @@ class SCPI_Instrument():
             re.match( resource, res, re.IGNORECASE )
             for res in rm.list_resources()
         ]
-        
+
         matches = [ match for match in matches if match is not None ]
         if len( matches ) == 0:
             # no matching resources found
