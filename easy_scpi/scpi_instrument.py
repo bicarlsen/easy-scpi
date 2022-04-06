@@ -445,21 +445,18 @@ class SCPI_Instrument():
         :param port: Name of port to connect to.
         :raises ValueError: If connection type is not specified.
         """
+        prefixes = ['COM', 'USB', 'GPIB', 'TCPIP']
         port_name = port.upper()
 
-        if (
-            ( not port_name.startswith( 'COM' ) ) and
-            ( not port_name.startswith( 'USB' ) ) and
-            ( not port_name.startswith( 'GPIB' ) )
-        ):
-            raise ValueError( "Port must start with 'COM', 'USB', or 'GPIB'." )
+        if not any(port_name.startswith(p) for p in prefixes):
+            raise ValueError( "Port must start with one of the following: %s." % prefixes )
 
         if self.__inst is not None:
             self.disconnect()
 
         self.__port = port
         # search for resource
-        if port_name.startswith( 'USB' ) or port_name.startswith( 'GPIB' ):
+        if any(port_name.startswith(p) for p in prefixes[1:]):
             resource_pattern = (
                 port
                 if port_name.endswith( 'INSTR' ) else
@@ -472,7 +469,7 @@ class SCPI_Instrument():
 
         else:
             # redundant error check for future compatibility
-            raise ValueError( "Port must start with 'COM', 'USB', or 'GPIB'." )
+            raise ValueError( "Port must start with one of the following: %s." % prefixes )
 
         # single matching resource
         resource = self._match_resource( resource_pattern ) if match else resource_pattern
@@ -489,6 +486,7 @@ class SCPI_Instrument():
         :raises RuntimeError: If resource matching specified port could not be found.
         :raises RuntimeError: If more than 1 matching resource is found.
         """
+        prefixes = ['USB', 'GPIB', 'TCPIP']
         port_name = port.upper()
 
         if self.__inst is not None:
@@ -497,7 +495,7 @@ class SCPI_Instrument():
         self.__port = port
 
         # search for resource
-        if port_name.startswith( 'USB' ) or port_name.startswith( 'GPIB' ):
+        if any(port_name.startswith(p) for p in prefixes):
             resource_pattern = (
                 port
                 if port_name.endswith( 'INSTR' ) else
