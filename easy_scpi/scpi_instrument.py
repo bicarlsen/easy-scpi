@@ -474,23 +474,34 @@ class SCPI_Instrument():
         :raises RuntimeError: If resource matching specified port could not be found.
         :raises RuntimeError: If more than 1 matching resource is found.
         """
+        port_name = port.upper()
+
         if self.__inst is not None:
             self.disconnect()
 
         self.__port = port
 
-        # build resource pattern
-        resource_pattern = port
-        if not resource_pattern.startswith( 'ASRL' ):
-            asrl = 'ASRL'
-            if not resource_pattern.startswith( '/' ):
-                # append inital '/' if needed
-                asrl += '/'
+        # search for resource
+        if port_name.startswith( 'USB' ) or port_name.startswith( 'GPIB' ):
+            resource_pattern = (
+                port
+                if port_name.endswith( 'INSTR' ) else
+                f'{ port }::.*::INSTR'
+            )
 
-            resource_pattern = f'{asrl}{resource_pattern}'
+        else:
+            # build resource pattern
+            resource_pattern = port
+            if not resource_pattern.startswith( 'ASRL' ):
+                asrl = 'ASRL'
+                if not resource_pattern.startswith( '/' ):
+                    # append inital '/' if needed
+                    asrl += '/'
 
-        if not resource_pattern.endswith( '::INSTR' ):
-            resource_pattern = f'{resource_pattern}::INSTR'
+                resource_pattern = f'{asrl}{resource_pattern}'
+
+            if not resource_pattern.endswith( '::INSTR' ):
+                resource_pattern = f'{resource_pattern}::INSTR'
 
         resource = self._match_resource( resource_pattern )
         self.__rid = resource
