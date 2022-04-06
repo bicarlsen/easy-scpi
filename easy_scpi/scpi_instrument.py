@@ -171,6 +171,7 @@ class SCPI_Instrument():
     def __init__(
         self,
         port = None,
+        port_match = True,
         backend = '',
         handshake = False,
         arg_separator = ',',
@@ -192,6 +193,7 @@ class SCPI_Instrument():
         self.__rm = visa.ResourceManager( backend ) # the VISA resource manager
         self.__inst = None # the device
         self.__port = None
+        self.__port_match = port_match
         self.__rid = None # the resource id of the instrument
         self.__resource_params = resource_params # options for connection
 
@@ -265,10 +267,23 @@ class SCPI_Instrument():
 
         system = platform.system()
         if system == 'Windows':
-            self._set_port_windows( port )
+            self._set_port_windows( port, match=self.port_match )
 
         else:
-            self._set_port_linux( port )
+            self._set_port_linux( port, match=self.port_match )
+
+
+    @property
+    def port_match( self ):
+        """
+        Set if before to open a port it must me searched and found
+        """
+        return self.__port_match
+
+
+    @port_match.setter
+    def port_match( self, port_match ):
+        self.__port_match = port_match
 
 
     @property
@@ -422,7 +437,7 @@ class SCPI_Instrument():
                 raise RuntimeError( hs )
 
 
-    def _set_port_windows( self, port ):
+    def _set_port_windows( self, port, match=True ):
         """
         Disconnects from current connection and updates port and id.
         Does not reconnect.
@@ -460,11 +475,11 @@ class SCPI_Instrument():
             raise ValueError( "Port must start with 'COM', 'USB', or 'GPIB'." )
 
         # single matching resource
-        resource = self._match_resource( resource_pattern )
+        resource = self._match_resource( resource_pattern ) if match else resource_pattern
         self.__rid = resource
 
 
-    def _set_port_linux( self, port ):
+    def _set_port_linux( self, port, match=True ):
         """
         Disconnects from current connection and updates port and id.
         Does not reconnect.
@@ -503,7 +518,7 @@ class SCPI_Instrument():
             if not resource_pattern.endswith( '::INSTR' ):
                 resource_pattern = f'{resource_pattern}::INSTR'
 
-        resource = self._match_resource( resource_pattern )
+        resource = self._match_resource( resource_pattern ) if match else resource_pattern
         self.__rid = resource
 
 
