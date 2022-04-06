@@ -222,6 +222,14 @@ class SCPI_Instrument():
         return resp
 
 
+    def __enter__(self):
+        self.connect()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.disconnect()
+
+
     #--- private methods ---
 
 
