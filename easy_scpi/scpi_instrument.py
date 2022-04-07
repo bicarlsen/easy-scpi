@@ -459,7 +459,7 @@ class SCPI_Instrument():
         if any(port_name.startswith(p) for p in prefixes[1:]):
             resource_pattern = (
                 port
-                if port_name.endswith( 'INSTR' ) else
+                if port_name.endswith( 'INSTR' ) or port_name.endswith( 'SOCKET' ) else
                 f'{ port }::.*::INSTR'
             )
 
@@ -498,7 +498,7 @@ class SCPI_Instrument():
         if any(port_name.startswith(p) for p in prefixes):
             resource_pattern = (
                 port
-                if port_name.endswith( 'INSTR' ) else
+                if port_name.endswith( 'INSTR' ) or port_name.endswith( 'SOCKET' ) else
                 f'{ port }::.*::INSTR'
             )
 
