@@ -224,11 +224,11 @@ class SCPI_Instrument():
         return resp
 
 
-    def __enter__(self):
+    def __enter__( self ):
         self.connect()
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__( self, exc_type, exc_value, traceback ):
         self.disconnect()
 
 
@@ -437,7 +437,7 @@ class SCPI_Instrument():
                 raise RuntimeError( hs )
 
 
-    def _set_port_windows( self, port, match=True ):
+    def _set_port_windows( self, port, match = True ):
         """
         Disconnects from current connection and updates port and id.
         Does not reconnect.
@@ -448,15 +448,15 @@ class SCPI_Instrument():
         prefixes = ['COM', 'USB', 'GPIB', 'TCPIP']
         port_name = port.upper()
 
-        if not any(port_name.startswith(p) for p in prefixes):
-            raise ValueError( "Port must start with one of the following: %s." % prefixes )
+        if not any( port_name.startswith( p ) for p in prefixes ):
+            raise ValueError( f'Port must start with one of the following: {prefixes}.' )
 
         if self.__inst is not None:
             self.disconnect()
 
         self.__port = port
         # search for resource
-        if any(port_name.startswith(p) for p in prefixes[1:]):
+        if any( port_name.startswith( p ) for p in prefixes[1:] ):
             resource_pattern = (
                 port
                 if port_name.endswith( 'INSTR' ) or port_name.endswith( 'SOCKET' ) else
@@ -469,14 +469,14 @@ class SCPI_Instrument():
 
         else:
             # redundant error check for future compatibility
-            raise ValueError( "Port must start with one of the following: %s." % prefixes )
+            raise ValueError( f'Port must start with one of the following: {prefixes}.' )
 
         # single matching resource
         resource = self._match_resource( resource_pattern ) if match else resource_pattern
         self.__rid = resource
 
 
-    def _set_port_linux( self, port, match=True ):
+    def _set_port_linux( self, port, match = True ):
         """
         Disconnects from current connection and updates port and id.
         Does not reconnect.
@@ -495,7 +495,7 @@ class SCPI_Instrument():
         self.__port = port
 
         # search for resource
-        if any(port_name.startswith(p) for p in prefixes):
+        if any( port_name.startswith( p ) for p in prefixes ):
             resource_pattern = (
                 port
                 if port_name.endswith( 'INSTR' ) or port_name.endswith( 'SOCKET' ) else
