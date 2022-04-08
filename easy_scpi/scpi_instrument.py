@@ -171,6 +171,7 @@ class SCPI_Instrument():
     def __init__(
         self,
         port = None,
+        port_match = True,
         backend = '',
         handshake = False,
         arg_separator = ',',
@@ -192,6 +193,7 @@ class SCPI_Instrument():
         self.__rm = visa.ResourceManager( backend ) # the VISA resource manager
         self.__inst = None # the device
         self.__port = None
+        self.__port_match = port_match
         self.__rid = None # the resource id of the instrument
         self.__resource_params = resource_params # options for connection
 
@@ -220,6 +222,14 @@ class SCPI_Instrument():
     def __getattr__( self, name ):
         resp = Property( self, name, arg_separator = self.arg_separator )
         return resp
+
+
+    def __enter__( self ):
+        self.connect()
+        return self
+
+    def __exit__( self, exc_type, exc_value, traceback ):
+        self.disconnect()
 
 
     #--- private methods ---
@@ -257,10 +267,23 @@ class SCPI_Instrument():
 
         system = platform.system()
         if system == 'Windows':
-            self._set_port_windows( port )
+            self._set_port_windows( port, match=self.port_match )
 
         else:
-            self._set_port_linux( port )
+            self._set_port_linux( port, match=self.port_match )
+
+
+    @property
+    def port_match( self ):
+        """
+        Set if before to open a port it must me searched and found
+        """
+        return self.__port_match
+
+
+    @port_match.setter
+    def port_match( self, port_match ):
+        self.__port_match = port_match
 
 
     @property
@@ -414,7 +437,7 @@ class SCPI_Instrument():
                 raise RuntimeError( hs )
 
 
-    def _set_port_windows( self, port ):
+    def _set_port_windows( self, port, match = True ):
         """
         Disconnects from current connection and updates port and id.
         Does not reconnect.
@@ -422,24 +445,21 @@ class SCPI_Instrument():
         :param port: Name of port to connect to.
         :raises ValueError: If connection type is not specified.
         """
+        prefixes = ['COM', 'USB', 'GPIB', 'TCPIP']
         port_name = port.upper()
 
-        if (
-            ( not port_name.startswith( 'COM' ) ) and
-            ( not port_name.startswith( 'USB' ) ) and
-            ( not port_name.startswith( 'GPIB' ) )
-        ):
-            raise ValueError( "Port must start with 'COM', 'USB', or 'GPIB'." )
+        if not any( port_name.startswith( p ) for p in prefixes ):
+            raise ValueError( f'Port must start with one of the following: {prefixes}.' )
 
         if self.__inst is not None:
             self.disconnect()
 
         self.__port = port
         # search for resource
-        if port_name.startswith( 'USB' ) or port_name.startswith( 'GPIB' ):
+        if any( port_name.startswith( p ) for p in prefixes[1:] ):
             resource_pattern = (
                 port
-                if port_name.endswith( 'INSTR' ) else
+                if port_name.endswith( 'INSTR' ) or port_name.endswith( 'SOCKET' ) else
                 f'{ port }::.*::INSTR'
             )
 
@@ -449,14 +469,14 @@ class SCPI_Instrument():
 
         else:
             # redundant error check for future compatibility
-            raise ValueError( "Port must start with 'COM', 'USB', or 'GPIB'." )
+            raise ValueError( f'Port must start with one of the following: {prefixes}.' )
 
         # single matching resource
-        resource = self._match_resource( resource_pattern )
+        resource = self._match_resource( resource_pattern ) if match else resource_pattern
         self.__rid = resource
 
 
-    def _set_port_linux( self, port ):
+    def _set_port_linux( self, port, match = True ):
         """
         Disconnects from current connection and updates port and id.
         Does not reconnect.
@@ -466,25 +486,37 @@ class SCPI_Instrument():
         :raises RuntimeError: If resource matching specified port could not be found.
         :raises RuntimeError: If more than 1 matching resource is found.
         """
+        prefixes = ['USB', 'GPIB', 'TCPIP']
+        port_name = port.upper()
+
         if self.__inst is not None:
             self.disconnect()
 
         self.__port = port
 
-        # build resource pattern
-        resource_pattern = port
-        if not resource_pattern.startswith( 'ASRL' ):
-            asrl = 'ASRL'
-            if not resource_pattern.startswith( '/' ):
-                # append inital '/' if needed
-                asrl += '/'
+        # search for resource
+        if any( port_name.startswith( p ) for p in prefixes ):
+            resource_pattern = (
+                port
+                if port_name.endswith( 'INSTR' ) or port_name.endswith( 'SOCKET' ) else
+                f'{ port }::.*::INSTR'
+            )
 
-            resource_pattern = f'{asrl}{resource_pattern}'
+        else:
+            # build resource pattern
+            resource_pattern = port
+            if not resource_pattern.startswith( 'ASRL' ):
+                asrl = 'ASRL'
+                if not resource_pattern.startswith( '/' ):
+                    # append inital '/' if needed
+                    asrl += '/'
 
-        if not resource_pattern.endswith( '::INSTR' ):
-            resource_pattern = f'{resource_pattern}::INSTR'
+                resource_pattern = f'{asrl}{resource_pattern}'
 
-        resource = self._match_resource( resource_pattern )
+            if not resource_pattern.endswith( '::INSTR' ):
+                resource_pattern = f'{resource_pattern}::INSTR'
+
+        resource = self._match_resource( resource_pattern ) if match else resource_pattern
         self.__rid = resource
 
 
