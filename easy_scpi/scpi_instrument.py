@@ -178,7 +178,7 @@ class SCPI_Instrument():
         **resource_params
     ):
         """
-        Creates an instance of an Instrument, to communicate with VISA instruments
+        Creates an instance of an Instrument, to communicate with VISA instruments.
 
         :param port: The name of the port to connect to. [Default: None]
         :param backend: The pyvisa backend to use for communication. [Defualt: '']
@@ -190,16 +190,16 @@ class SCPI_Instrument():
         """
         #--- private instance vairables ---
         self.__backend = backend
-        self.__rm = visa.ResourceManager( backend ) # the VISA resource manager
-        self.__inst = None # the device
+        self.__rm = visa.ResourceManager( backend )  # the VISA resource manager
+        self.__inst = None  # the device
         self.__port = None
         self.__port_match = port_match
-        self.__rid = None # the resource id of the instrument
-        self.__resource_params = resource_params # options for connection
+        self.__rid = None  # the resource id of the instrument
+        self.__resource_params = resource_params  # options for connection
 
 
         # init connection
-        self.port = port # initilaize port
+        self.port = port  # initilaize port
         self.arg_separator = arg_separator
 
         if handshake is True:
@@ -227,6 +227,7 @@ class SCPI_Instrument():
     def __enter__( self ):
         self.connect()
         return self
+
 
     def __exit__( self, exc_type, exc_value, traceback ):
         self.disconnect()
@@ -267,35 +268,41 @@ class SCPI_Instrument():
 
         system = platform.system()
         if system == 'Windows':
-            self._set_port_windows( port, match=self.port_match )
+            self._set_port_windows( port, match = self.port_match )
 
         else:
-            self._set_port_linux( port, match=self.port_match )
+            self._set_port_linux( port, match = self.port_match )
 
 
     @property
     def port_match( self ):
         """
-        Set if before to open a port it must me searched and found
+        Requires the port to be searched and found before connecting.
         """
         return self.__port_match
 
 
     @port_match.setter
     def port_match( self, port_match ):
+        """
+        :param port_match: Whether to require the port to be found before connecting.
+        """
         self.__port_match = port_match
 
 
     @property
     def rid( self ):
         """
-        Return the resource id of the instrument
+        Return the resource id of the instrument.
         """
         return self.__rid
 
 
     @rid.setter
     def rid( self, rid ):
+        """
+        :param rid: Resource id.
+        """
         self.__rid = rid
 
 
@@ -307,7 +314,7 @@ class SCPI_Instrument():
     @property
     def id( self ):
         """
-        Returns the id of the ammeter
+        Returns the id of the instrument.
         """
         return self.query( '*IDN?' )
 
@@ -315,7 +322,7 @@ class SCPI_Instrument():
     @property
     def value( self ):
         """
-        Get current value
+        Get current value.
         """
         return self.query( 'READ?' )
 
@@ -323,7 +330,7 @@ class SCPI_Instrument():
     @property
     def connected( self ):
         """
-        Returns if the instrument is connected
+        Returns if the instrument is connected.
         """
         if self.__inst is None:
             return False
@@ -340,7 +347,7 @@ class SCPI_Instrument():
     @property
     def is_connected( self ):
         """
-        Alias for connected
+        Alias for connected.
         """
         return self.connected
 
@@ -368,7 +375,7 @@ class SCPI_Instrument():
 
     def disconnect( self ):
         """
-        Disconnects from the instrument, and returns local control
+        Disconnects from the instrument, and returns local control.
         """
         if self.__inst is not None:
             self.__inst.close()
@@ -376,7 +383,11 @@ class SCPI_Instrument():
 
     def write( self, msg ):
         """
-        Delegates write to resource
+        Delegates write to resource.
+
+        :param msg: Message to send.
+        :returns: Response from the message.
+        :raises RuntimeError: If an instrument is not connected.
         """
         if self.__inst is None:
             raise RuntimeError( 'Can not write, instrument not connected.' )
@@ -389,7 +400,10 @@ class SCPI_Instrument():
 
     def read( self ):
         """
-        Delegates read to resource
+        Delegates read to resource.
+
+        :returns: Response from the read.
+        :raises RuntimeError: If an instrument is not connected.
         """
         if self.__inst is None:
             raise RuntimeError( 'Can not read, instrument not connected' )
@@ -400,7 +414,11 @@ class SCPI_Instrument():
 
     def query( self, msg ):
         """
-        Delegates query to resource
+        Delegates query to resource.
+
+        :param msg: Message to send.
+        :returns: Response from the message.
+        :raises RuntimeError: If an instrument is not connected.
         """
         if self.__inst is None:
             raise RuntimeError( 'Can not query, instrument not connected' )
@@ -413,14 +431,20 @@ class SCPI_Instrument():
 
     def reset( self ):
         """
-        Resets the meter to inital state
+        Resets the meter to inital state.
+        Sends `*RST` command.
+
+        :returns: Response from the command.
         """
         return self.write( '*RST' )
 
 
     def init( self ):
         """
-        Initialize the instrument
+        Initialize the instrument.
+        Sends the `INIT` command.
+
+        :returns: Response from the command.
         """
         return self.write( 'INIT' )
 
@@ -443,9 +467,10 @@ class SCPI_Instrument():
         Does not reconnect.
 
         :param port: Name of port to connect to.
+        :param match: Whether to require the port to be verified or not. [Default: True]
         :raises ValueError: If connection type is not specified.
         """
-        prefixes = ['COM', 'USB', 'GPIB', 'TCPIP']
+        prefixes = [ 'COM', 'USB', 'GPIB', 'TCPIP' ]
         port_name = port.upper()
 
         if not any( port_name.startswith( p ) for p in prefixes ):
@@ -455,8 +480,10 @@ class SCPI_Instrument():
             self.disconnect()
 
         self.__port = port
+
         # search for resource
-        if any( port_name.startswith( p ) for p in prefixes[1:] ):
+        if any( port_name.startswith( p ) for p in prefixes[ 1: ] ):
+            # connections except com
             resource_pattern = (
                 port
                 if port_name.endswith( 'INSTR' ) or port_name.endswith( 'SOCKET' ) else
@@ -465,14 +492,19 @@ class SCPI_Instrument():
 
         elif port_name.startswith( 'COM' ):
             r_port = port.replace( 'COM', '' )
-            resource_pattern = f'ASRL((?:COM)?{ r_port })::INSTR'
+            resource_pattern = f'ASRL((?:COM)?{r_port})::INSTR'
 
         else:
             # redundant error check for future compatibility
             raise ValueError( f'Port must start with one of the following: {prefixes}.' )
 
         # single matching resource
-        resource = self._match_resource( resource_pattern ) if match else resource_pattern
+        resource = (
+            self._match_resource( resource_pattern )
+            if match else
+            resource_pattern
+        )
+
         self.__rid = resource
 
 
@@ -486,7 +518,7 @@ class SCPI_Instrument():
         :raises RuntimeError: If resource matching specified port could not be found.
         :raises RuntimeError: If more than 1 matching resource is found.
         """
-        prefixes = ['USB', 'GPIB', 'TCPIP']
+        prefixes = [ 'USB', 'GPIB', 'TCPIP' ]
         port_name = port.upper()
 
         if self.__inst is not None:
@@ -516,7 +548,12 @@ class SCPI_Instrument():
             if not resource_pattern.endswith( '::INSTR' ):
                 resource_pattern = f'{resource_pattern}::INSTR'
 
-        resource = self._match_resource( resource_pattern ) if match else resource_pattern
+        resource = (
+            self._match_resource( resource_pattern )
+            if match else
+            resource_pattern
+        )
+        
         self.__rid = resource
 
 
