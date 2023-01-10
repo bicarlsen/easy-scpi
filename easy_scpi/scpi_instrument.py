@@ -101,14 +101,17 @@ class Property( object ):
             if len( values ) == 0:
                 # get property
                 return self.__inst.query( f'{ self.name }?')
+            # will len(values) >= here
+            # set value
+            values = [ str( val ) for val in values ]
+            # allow for queries with additional arguments
+            if query := values[0] in ('?',):
+                values.pop(0)
+            values = self.arg_separator.join( values )
 
-            else:
-                # set value
-                values = [ str( val ) for val in values ]
-                values = self.arg_separator.join( values )
-
-                cmd = f'{ self.name } { values }'
-                return self.__inst.write( cmd )
+            cmd = f'{ self.name }{ "?" if query else "" } { values }'
+            fn = self.__inst.query if query else self.__inst.write
+            return fn( cmd )
 
 
         #--- static methods ---
