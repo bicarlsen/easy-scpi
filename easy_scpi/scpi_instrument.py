@@ -175,7 +175,7 @@ class SCPI_Instrument():
         backend = '',
         handshake = False,
         arg_separator = ',',
-        cmd_prefix = '',
+        prefix_cmds = False,
         **resource_params
     ):
         """
@@ -185,7 +185,7 @@ class SCPI_Instrument():
         :param backend: The pyvisa backend to use for communication. [Defualt: '']
         :param handshake: Handshake mode. [Default: False]
         :param arg_separator: Separator to use between arguments. [Default: ',']
-        :param cmd_prefix: Optional prefix for commands. [Default: '']
+        :param prefix_cmds: Option to prefix all commands with a colon. [Default: False]
         :param resource_params: Arguments sent to the resource upon connection.
             https://pyvisa.readthedocs.io/en/latest/api/resources.html
         :returns: An Instrument communicator.
@@ -204,7 +204,7 @@ class SCPI_Instrument():
 
         # init command parameters
         self.arg_separator = arg_separator
-        self.cmd_prefix = cmd_prefix
+        self.prefix_cmds = prefix_cmds
 
         if handshake is True:
             handshake = 'OK'
@@ -224,7 +224,7 @@ class SCPI_Instrument():
 
 
     def __getattr__( self, name ):
-        resp = Property( self, self.cmd_prefix+name, arg_separator = self.arg_separator )
+        resp = Property( self, self.prefix_cmds*":"+name, arg_separator = self.arg_separator )
         return resp
 
 
