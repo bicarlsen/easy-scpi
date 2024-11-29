@@ -97,18 +97,23 @@ class Property( object ):
             )
 
 
-        def __call__( self, *values ):
-            if len( values ) == 0:
-                # get property
-                return self.__inst.query( f'{ self.name }?')
-
-            else:
-                # set value
+        def __call__( self, *values, query=False):
+            """
+            Calls an SCPI command. If no values are passed it acts as a query 'COMMand?'
+            If values are passed it acts as a write 'COMMand [values]'.
+            For queries that require arguments, query=True can be passed.
+            """
+            # Set up command format.
+            command = '{cmd}'
+            if args_passed := len( values ) > 0:
+                # Parse args into understandable format
                 values = [ str( val ) for val in values ]
-                values = self.arg_separator.join( values )
-
-                cmd = f'{ self.name } { values }'
-                return self.__inst.write( cmd )
+                command += ' '+self.arg_separator.join( values )
+            if query or not args_passed:
+                # If query is forced or no args are passed, query the __inst
+                return self.__inst.query(command.format(cmd=self.name+'?'))
+            # Else write to __inst
+            return self.__inst.write(command.format(cmd=self.name))
 
 
         #--- static methods ---
