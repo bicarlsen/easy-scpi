@@ -1,0 +1,35 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "easy-scpi"
+dynamic = ["version"]
+description = "An easy library for controlling SCPI instruments."
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+keywords = ["scpi"]
+authors = [
+  { name="Brian Carlsen", email="carlsen.bri@gmail.com" },
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+]
+dependencies = ["pyVISA"]
+
+[project.urls]
+Issues = "https://github.com/bicarlsen/easy-scpi/issues"
+Source = "https://github.com/bicarlsen/easy-scpi"
+Homepage = "https://github.com/bicarlsen/easy-scpi"
+
+[tool.hatch.version]
+path = "src/easy_scpi/__about__.py"
+
+[tool.hatch.build.targets.sdist]
+exclude = []
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/easy_scpi"]
