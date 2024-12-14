@@ -5,7 +5,7 @@ A simple and robust library making communication with [SCPI](https://en.wikipedi
 
 ## API
 ### SCPI Commands
-Generic SCPI commands can be executed by transforming the SCPI code in to attributes via the hierarchy relationship, then calling it. Instrument properties can be queried by passing no arguments to the call. Commands with no arguments are run by passing an empty string to the call.
+Generic SCPI commands can be executed by transforming the SCPI code in to attributes via the hierarchy relationship, then calling it. Instrument properties can be queried by passing no arguments to the call (or specifying query=True). Commands with no arguments are run by passing an empty string to the call.
 
 #### Examples
 ~~~python
@@ -19,6 +19,9 @@ inst = scpi.Instrument( <port> )
 inst.measure.voltage.dc()
 # or
 inst.meas.volt.dc()
+
+# Passing args to a query [MEASure:VOLTage:DC? MIN]
+inst.measure.voltage.dc("MIN", query=True)
 
 # Set the voltage to 1 V [MEASure:VOLTage:DC 1]
 inst.measure.voltage.dc( 1 )
