@@ -10,16 +10,18 @@ Using PyVISA.
 import easy_scpi as scpi
 
 ip = "192.108.0.220"
-port = "50000" # default is 5025
+port = "50000"
 
 # Define an instrument
-inst = scpi.Instrument(read_termination='\n', write_termination='\n', timeout=5000) # include a timeout for reading the power level (obtained by trial-and-error)
-inst.rid=f"TCPIP::{ip}::{port}::SOCKET" # define IP PORT
-
+inst = scpi.Instrument(
+    port = f"TCPIP::{ip}::{port}::SOCKET",
+    read_termination="\n", 
+    write_termination="\n", 
+    timeout=5000,
+) 
 
 # Connect to an instrument
 inst.connect()
-
 
 # Some commands
 print(inst.system.mode("RMODe"))

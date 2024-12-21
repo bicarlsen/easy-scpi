@@ -1,0 +1,28 @@
+spec: "1.1"
+resources:
+  TCPIP::0.0.0.1::3000::SOCKET:
+    device: BASIC
+
+devices:
+  BASIC:
+    eom:
+      TCPIP INSTR:
+        q: "\n"
+        r: "\n"
+    dialogues:
+      - q: "*IDN?"
+        r: "mock instrument"
+    properties:
+      frequency:
+        default: 100.0
+        getter:
+          q: "FREQ?"
+          r: "{:.2f}"
+        setter:
+          q: "FREQ {:.2f}"
+          r: OK
+          e: 'FREQ_ERROR'
+        specs:
+          min: 1
+          max: 100000
+          type: float

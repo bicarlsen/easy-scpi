@@ -18,7 +18,10 @@ classifiers = [
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
 ]
-dependencies = ["pyVISA"]
+dependencies = ["pyvisa"]
+
+[project.optional-dependencies]
+tests = ["pyvisa-sim"]
 
 [project.urls]
 Issues = "https://github.com/bicarlsen/easy-scpi/issues"
@@ -33,3 +36,9 @@ exclude = []
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/easy_scpi"]
+
+[tool.pytest.ini_options]
+pythonpath = "src"
+addopts = [
+  "--import-mode=importlib",
+]
