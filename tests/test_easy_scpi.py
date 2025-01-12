@@ -1,13 +1,14 @@
 import platform
 import easy_scpi as scpi
+import pathlib
 
-def test_easy_scpi():      
+def test_easy_scpi():
     inst = scpi.Instrument(
         port="TCPIP::0.0.0.1::3000::SOCKET", 
         port_match=False, 
         read_termination="\n", 
         write_termination="\n",
-        backend='tests/instrument_mock.yaml@sim',
+        backend=str((pathlib.Path(__file__).parent /'instrument_mock.yaml@sim').resolve()),
     )
     inst.connect()
     
