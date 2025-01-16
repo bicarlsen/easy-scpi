@@ -26,3 +26,19 @@ devices:
           min: 1
           max: 100000
           type: float
+      frequency-max:
+        default: 100000
+        getter:
+          q: "FREQ? MAX"
+          r: "{:.2f}"
+        setter:
+          q: "FREQ"
+        specs:
+          type: float
+      frequency-min:
+        default: 1
+        getter:
+          q: "FREQ? MIN"
+          r: "{:.2f}"
+        specs:
+          type: float
